@@ -1,0 +1,58 @@
+version: '2'
+
+
+volumes:
+  mysql-liferay:
+  liferay:
+
+services:
+
+  rproxy:
+    build:
+      context: ./rproxy
+      args:
+        - machine_domain
+    image: rproxy
+    ports:
+      - "80:80"
+    container_name: rproxy
+    links:
+      - "liferay"
+
+
+  liferay:
+    build:
+      context: ./liferay
+      args:
+        - liferay_home_folder
+        - liferay_tomcat_folder
+        - liferay_mysql_user
+        - liferay_mysql_password
+        - machine_domain
+    image: liferay
+    ports:
+      - "8080:8080"
+    volumes:
+      - liferay:/var/liferay
+    container_name: liferay
+    working_dir: ${liferay_home_folder}
+    links:
+      - "mysql-liferay"
+
+
+  mysql-liferay:
+    build:
+      context: ./mysql
+    image: mysql-liferay
+    ports:
+      - "9306:3306"
+    volumes:
+      - mysql-liferay:/var/lib/mysql
+    container_name: mysql-liferay
+    environment:
+      - MYSQL_ROOT_PASSWORD=${liferay_mysql_password}
+      - MYSQL_DATABASE=${liferay_mysql_database}
+      - MYSQL_USER=${liferay_mysql_user}
+      - MYSQL_PASSWORD=${liferay_mysql_password}
+
+    
